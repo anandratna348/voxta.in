@@ -25,13 +25,13 @@ def initialize_database() -> None:
             """
             CREATE TABLE IF NOT EXISTS meeting_sessions (
                 id TEXT PRIMARY KEY,
+                owner_id TEXT NOT NULL,
                 title TEXT NOT NULL,
-                status TEXT NOT NULL DEFAULT 'active'
-                    CHECK (status IN ('active', 'paused', 'completed', 'failed')),
+                status TEXT NOT NULL DEFAULT 'active',
                 started_at TEXT NOT NULL,
-                ended_at TEXT,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
+                sended_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
             CREATE TABLE IF NOT EXISTS transcript_segments (
                 id TEXT PRIMARY KEY,

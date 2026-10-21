@@ -5,6 +5,8 @@ from fastapi import FastAPI
 
 from app.core.config import get_settings
 from app.db.database import initialize_database
+from app.api.routes.sessions import router as sessions_router
+from app.api.routes.transcripts import router as transcripts_router
 
 settings = get_settings()
 
@@ -22,6 +24,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.include_router(sessions_router, prefix="/api/v1")
+app.include_router(transcripts_router, prefix="/api/v1")
 
 
 @app.get("/health")
