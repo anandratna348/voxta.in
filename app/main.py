@@ -7,6 +7,7 @@ from app.core.config import get_settings
 from app.db.database import initialize_database
 from app.api.routes.sessions import router as sessions_router
 from app.api.routes.transcripts import router as transcripts_router
+from app.api.routes.agent import router as agent_router
 
 settings = get_settings()
 
@@ -26,6 +27,7 @@ app = FastAPI(
 )
 app.include_router(sessions_router, prefix="/api/v1")
 app.include_router(transcripts_router, prefix="/api/v1")
+app.include_router(agent_router, prefix="/api/v1")
 
 
 @app.get("/health")

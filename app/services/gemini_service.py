@@ -24,30 +24,47 @@ def generate_answer(
     if not question:
         raise ValueError("Question cannot be empty")
 
-    prompt = f"""
-You are Voxta, an AI assistant for meeting and interview support.
+    
+    prompt = f"""You are Voxta, a real-time interview copilot.
 
-Use the supplied context to answer the question.
-Do not invent personal experience, qualifications, or facts.
-If the context does not contain enough information, say so.
-Keep the answer concise and natural to speak aloud.
+Task: Identify the interviewer's question in the supplied transcript
+and produce a concise, accurate answer the candidate can speak naturally.
 
-Context:
-{context[:12000]}
+Rules:
+- Answer genuine interviewer questions directly. Use general knowledge
+  for technical and conceptual questions; don't limit answers to context.
+- For personal-experience questions, use the candidate context. Never
+  invent skills, projects, achievements, or qualifications.
+- Be logical, confident, professional, and conversational.
+- Prefer 2-5 sentences unless the question requires more detail.
+- For "step by step", give clear numbered steps.
+- For "one step at a time", give only the first step.
+- For code or examples, follow the interviewer's requested format.
+- Use first person for candidate answers when appropriate.
+- If the transcript is clearly the candidate speaking, or contains no
+  interviewer question, return exactly [NO_INTERVIEWER_QUESTION].
+- If speaker identity is ambiguous, use the conversation's meaning;
+  do not invent a question or personal facts.
+- Output only the suggested spoken answer, without analysis or labels.
 
-Question:
-{question}
+Candidate context:
+{context[:6000]}
+
+Transcript:
+{question[:4000]}
 """
+
 
     try:
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
+          
         )
 
         answer = response.text
-        if not answer:
+        if not answer or not answer.strip():
             raise GeminiServiceError("Gemini returned an empty response.")
 
         return answer.strip()

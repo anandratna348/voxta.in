@@ -1,6 +1,7 @@
 
 from datetime import datetime, timezone
 from uuid import uuid4
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -13,6 +14,10 @@ router = APIRouter(prefix="/sessions", tags=["Meetings"])
 class SessionCreate(BaseModel):
     owner_id: str = Field(min_length=1, max_length=128)
     title: str = Field(min_length=1, max_length=200)
+    
+class SessionStatusUpdate(BaseModel):
+    status: Literal["active", "paused", "completed"]
+
 
 
 class SessionResponse(BaseModel):
@@ -87,3 +92,51 @@ def get_session(
         raise HTTPException(status_code=404, detail="Meeting session not found")
 
     return SessionResponse(**dict(row))
+
+
+@router.patch("/{session_id}/status")
+def update_session_status(
+    session_id: str,
+    payload: SessionStatusUpdate,
+    owner_id: str = Query(min_length=1, max_length=128),
+):
+    with get_connection() as connection:
+        session = connection.execute(
+            """
+            SELECT id, status
+            FROM meeting_sessions
+            WHERE id = ? AND owner_id = ?
+            """,
+            (session_id, owner_id),
+        ).fetchone()
+
+        if session is None:
+            raise HTTPException(status_code=404, detail="Meeting session not found")
+
+        if session["status"] == "completed":
+            raise HTTPException(
+                status_code=409,
+                detail="A completed meeting cannot be changed",
+            )
+
+        ended_at = (
+            datetime.now(timezone.utc).isoformat()
+            if payload.status == "completed"
+            else None
+        )
+
+        connection.execute(
+            """
+            UPDATE meeting_sessions
+            SET status = ?, ended_at = ?
+            WHERE id = ? AND owner_id = ?
+            """,
+            (payload.status, ended_at, session_id, owner_id),
+        )
+
+    return {
+        "session_id": session_id,
+        "status": payload.status,
+        "ended_at": ended_at,
+    }
+
