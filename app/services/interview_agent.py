@@ -10,10 +10,8 @@ from app.services.question_detector import detect_question
 
 
 class InterviewAgent:
-    """Coordinates question detection and Gemini answer generation."""
-
     def __init__(self):
-        self._processed_questions: set[str] = set()
+        self._processed_questions = set()
         self._lock = threading.Lock()
 
     def process_transcript(
@@ -31,8 +29,9 @@ class InterviewAgent:
                 "reason": "No likely question detected",
             }
 
+        normalized = " ".join(text.lower().split())
         question_hash = hashlib.sha256(
-            " ".join(text.lower().split()).encode("utf-8")
+            f"{user_id}:{normalized}".encode("utf-8")
         ).hexdigest()
 
         with self._lock:
@@ -43,7 +42,6 @@ class InterviewAgent:
                     "reason": "Question already processed",
                 }
 
-            # Reserve this question to prevent concurrent duplicate requests.
             self._processed_questions.add(question_hash)
 
         try:
@@ -52,8 +50,8 @@ class InterviewAgent:
                 question=text,
                 context=context,
             )
-        except GeminiServiceError:
-            # Allow retry if Gemini fails.
+        except Exception:
+            # Permit retry if generation fails for any reason.
             with self._lock:
                 self._processed_questions.discard(question_hash)
             raise
