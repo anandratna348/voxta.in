@@ -9,6 +9,7 @@ from app.api.routes.sessions import router as sessions_router
 from app.api.routes.transcripts import router as transcripts_router
 from app.api.routes.agent import router as agent_router
 from app.api.routes.transcription import router as transcription_router
+from app.api.routes.auth import router as auth_router
 
 settings = get_settings()
 
@@ -30,6 +31,7 @@ app.include_router(sessions_router, prefix="/api/v1")
 app.include_router(transcripts_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(transcription_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
 
 
 @app.get("/health")

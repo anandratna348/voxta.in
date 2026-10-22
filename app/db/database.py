@@ -72,6 +72,18 @@ def initialize_database() -> None:
             CREATE INDEX IF NOT EXISTS idx_ai_answers_session
                 ON ai_answers(session_id, created_at);
 
+            
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    google_id TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL,
+    name TEXT NOT NULL DEFAULT '',
+    picture TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
             """
         )
 
@@ -112,4 +124,40 @@ def save_ai_answer(
         ).fetchone()
 
     return dict(row)
+
+
+
+def upsert_google_user(profile: dict) -> dict:
+    """Create or update a Voxta user from a verified Google profile."""
+    with get_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO users (id, google_id, email, name, picture)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(google_id) DO UPDATE SET
+                email = excluded.email,
+                name = excluded.name,
+                picture = excluded.picture,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                str(uuid4()),
+                profile["google_id"],
+                profile["email"],
+                profile.get("name", ""),
+                profile.get("picture", ""),
+            ),
+        )
+
+        row = connection.execute(
+            """
+            SELECT id, google_id, email, name, picture, created_at
+            FROM users
+            WHERE google_id = ?
+            """,
+            (profile["google_id"],),
+        ).fetchone()
+
+    return dict(row)
+
 

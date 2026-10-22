@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     port: int = 8765
     log_level: str = "INFO"
     data_dir: Path = get_default_data_dir()
+    google_client_id: str = ""
+    google_client_secret: str = ""
 
     model_config = SettingsConfigDict(
         env_prefix="VOXTA_",
