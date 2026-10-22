@@ -1,7 +1,6 @@
 
 import re
 
-
 QUESTION_STARTERS = (
     "what",
     "why",
@@ -24,13 +23,23 @@ QUESTION_STARTERS = (
 
 
 def detect_question(text: str) -> bool:
-    """Identify transcript segments that may contain interview questions."""
     cleaned = re.sub(r"\s+", " ", text).strip().lower()
 
     if not cleaned:
         return False
 
+    # Direct questions ending with a question mark.
     if "?" in cleaned:
         return True
 
-    return any(cleaned.startswith(starter) for starter in QUESTION_STARTERS)
+    # Questions or prompts that begin with common interview phrases.
+    if any(cleaned.startswith(starter) for starter in QUESTION_STARTERS):
+        return True
+
+    # Detect interview questions embedded in longer transcript text.
+    for starter in QUESTION_STARTERS:
+        pattern = rf"(?:^|[.!]\s+){re.escape(starter)}\b"
+        if re.search(pattern, cleaned):
+            return True
+
+    return False

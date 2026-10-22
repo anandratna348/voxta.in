@@ -25,7 +25,7 @@ class TranscriptionService:
 
         segments, _ = self.model.transcribe(
             str(path),
-            vad_filter=True,
+            vad_filter=False,
         )
 
         results = []

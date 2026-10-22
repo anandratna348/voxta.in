@@ -6,6 +6,9 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.db.database import get_connection
 
+from app.services.transcript_processor import TranscriptProcessor
+from app.services.gemini_service import GeminiServiceError
+
 router = APIRouter(prefix="/sessions", tags=["Transcripts"])
 
 
@@ -114,3 +117,58 @@ def list_segments(
         ).fetchall()
 
     return [TranscriptSegmentResponse(**dict(row)) for row in rows]
+
+_processor = TranscriptProcessor()
+
+
+@router.post("/{session_id}/process")
+def process_session_transcript(
+    session_id: str,
+    owner_id: str = Query(min_length=1, max_length=128),
+    context: str = Query(default="", max_length=6000),
+):
+    with get_connection() as connection:
+        session = connection.execute(
+            """
+            SELECT id
+            FROM meeting_sessions
+            WHERE id = ? AND owner_id = ?
+            """,
+            (session_id, owner_id),
+        ).fetchone()
+
+        if session is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Meeting session not found",
+            )
+
+        rows = connection.execute(
+            """
+            SELECT text
+            FROM transcript_segments
+            WHERE session_id = ?
+            ORDER BY sequence_number ASC
+            """,
+            (session_id,),
+        ).fetchall()
+
+    if not rows:
+        raise HTTPException(
+            status_code=400,
+            detail="No transcript segments found for this session",
+        )
+
+    transcript_text = " ".join(row["text"] for row in rows)
+
+    try:
+        return _processor.process_segment(
+            user_id=owner_id,
+            text=transcript_text,
+            context=context,
+        )
+    except GeminiServiceError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="Failed to generate an interview answer",
+        ) from exc
