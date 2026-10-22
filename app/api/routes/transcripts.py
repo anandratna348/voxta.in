@@ -1,13 +1,12 @@
-
 from uuid import uuid4
-
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field, model_validator
-
 from app.db.database import get_connection
-
 from app.services.transcript_processor import TranscriptProcessor
 from app.services.gemini_service import GeminiServiceError
+from app.db.database import get_connection, save_ai_answer
+from fastapi.responses import Response
+from app.services.pdf_service import generate_meeting_pdf
 
 router = APIRouter(prefix="/sessions", tags=["Transcripts"])
 
@@ -162,13 +161,132 @@ def process_session_transcript(
     transcript_text = " ".join(row["text"] for row in rows)
 
     try:
-        return _processor.process_segment(
+        result = _processor.process_segment(
             user_id=owner_id,
             text=transcript_text,
             context=context,
         )
+
+        answer = result.get("answer")
+
+        if result.get("question_detected") and answer:
+            try:
+                save_ai_answer(
+                    session_id=session_id,
+                    question_text=transcript_text,
+                    answer_text=answer,
+                )
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=404,
+                    detail=str(exc),
+                ) from exc
+
+        return result
     except GeminiServiceError as exc:
         raise HTTPException(
             status_code=502,
             detail="Failed to generate an interview answer",
         ) from exc
+
+
+
+@router.get("/{session_id}/answers")
+def list_ai_answers(
+    session_id: str,
+    owner_id: str = Query(min_length=1, max_length=128),
+):
+    with get_connection() as connection:
+        session = connection.execute(
+            """
+            SELECT id
+            FROM meeting_sessions
+            WHERE id = ? AND owner_id = ?
+            """,
+            (session_id, owner_id),
+        ).fetchone()
+
+        if session is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Meeting session not found",
+            )
+
+        rows = connection.execute(
+            """
+            SELECT id, session_id, question_text, answer_text, created_at
+            FROM ai_answers
+            WHERE session_id = ?
+            ORDER BY created_at ASC, id ASC
+            """,
+            (session_id,),
+        ).fetchall()
+
+    return {"answers": [dict(row) for row in rows]}
+
+
+
+@router.get("/{session_id}/export/pdf")
+def export_meeting_pdf(
+    session_id: str,
+    owner_id: str = Query(min_length=1, max_length=128),
+):
+    with get_connection() as connection:
+        session_row = connection.execute(
+            """
+            SELECT id, owner_id, title, status, started_at, sended_at, created_at
+            FROM meeting_sessions
+            WHERE id = ? AND owner_id = ?
+            """,
+            (session_id, owner_id),
+        ).fetchone()
+
+        if session_row is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Meeting session not found",
+            )
+
+        segment_rows = connection.execute(
+            """
+            SELECT sequence_number, speaker_label, text, start_ms, end_ms
+            FROM transcript_segments
+            WHERE session_id = ?
+            ORDER BY sequence_number ASC
+            """,
+            (session_id,),
+        ).fetchall()
+
+        answer_rows = connection.execute(
+            """
+            SELECT question_text, answer_text, created_at
+            FROM ai_answers
+            WHERE session_id = ?
+            ORDER BY created_at ASC, id ASC
+            """,
+            (session_id,),
+        ).fetchall()
+
+    pdf_bytes = generate_meeting_pdf(
+        session=dict(session_row),
+        segments=[dict(row) for row in segment_rows],
+        answers=[dict(row) for row in answer_rows],
+    )
+
+    safe_session_id = "".join(
+        character
+        for character in session_id
+        if character.isalnum() or character in "-_"
+    )
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="voxta-meeting-{safe_session_id}.pdf"'
+            )
+        },
+    )
+
+

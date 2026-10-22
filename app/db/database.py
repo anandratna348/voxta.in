@@ -2,6 +2,7 @@
 import sqlite3
 
 from app.core.config import get_settings
+from uuid import uuid4
 
 
 def get_connection() -> sqlite3.Connection:
@@ -52,5 +53,63 @@ def initialize_database() -> None:
 
             CREATE INDEX IF NOT EXISTS idx_segments_session
                 ON transcript_segments(session_id, sequence_number);
+
+
+
+            
+            CREATE TABLE IF NOT EXISTS ai_answers (
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                question_text TEXT NOT NULL,
+                answer_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                FOREIGN KEY (session_id)
+                    REFERENCES meeting_sessions(id)
+                    ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ai_answers_session
+                ON ai_answers(session_id, created_at);
+
             """
         )
+
+
+def save_ai_answer(
+    session_id: str,
+    question_text: str,
+    answer_text: str,
+) -> dict:
+    answer_id = str(uuid4())
+
+    with get_connection() as connection:
+        session = connection.execute(
+            "SELECT id FROM meeting_sessions WHERE id = ?",
+            (session_id,),
+        ).fetchone()
+
+        if session is None:
+            raise ValueError("Meeting session not found")
+
+        connection.execute(
+            """
+            INSERT INTO ai_answers (
+                id, session_id, question_text, answer_text
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (answer_id, session_id, question_text, answer_text),
+        )
+
+        row = connection.execute(
+            """
+            SELECT id, session_id, question_text, answer_text, created_at
+            FROM ai_answers
+            WHERE id = ?
+            """,
+            (answer_id,),
+        ).fetchone()
+
+    return dict(row)
+
