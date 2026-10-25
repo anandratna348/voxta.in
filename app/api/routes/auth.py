@@ -7,7 +7,7 @@ from app.services.google_auth_service import (
     GoogleAuthError,
     verify_google_token,
 )
-
+from app.services.google_oauth_flow import start_google_login
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
@@ -34,4 +34,14 @@ def google_login(payload: GoogleLoginRequest):
         raise HTTPException(
             status_code=401,
             detail=str(exc),
+        ) from exc
+
+@router.get("/google/start")
+def google_login_start():
+    try:
+        return start_google_login()
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Google OAuth is not configured.",
         ) from exc
