@@ -12,8 +12,8 @@ const nav = [
   { to: "/settings", label: "Settings", icon: Settings, end: false },
 ];
 
-const statusText = { checking: "Checking backend", online: "Backend connected", offline: "Backend offline" } as const;
-const statusDot = { checking: "bg-amber-500", online: "bg-sage-500", offline: "bg-rose-500" } as const;
+const statusText = { checking: "Checking backend", online: "Backend connected", busy: "Backend busy", offline: "Backend offline" } as const;
+const statusDot = { checking: "bg-amber-500", online: "bg-sage-500", busy: "bg-amber-500", offline: "bg-rose-500" } as const;
 
 export function BrandMark({ className }: { className?: string }) {
   return (

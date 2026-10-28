@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { healthApi } from "@/api/services";
 import { config } from "@/api/config";
+import { ApiError } from "@/api/errors";
 
-export type BackendState = "checking" | "online" | "offline";
+/** "busy" means the backend is running but too occupied (for example transcribing) to answer in time. */
+export type BackendState = "checking" | "online" | "busy" | "offline";
 
 export interface BackendStatus {
   state: BackendState;
@@ -23,9 +25,9 @@ export function useBackendStatus(): BackendStatus {
       const res = await healthApi.check(controller.signal);
       if (controller.signal.aborted) return;
       setState(res.status === "ok" ? "online" : "offline");
-    } catch {
+    } catch (error) {
       if (controller.signal.aborted) return;
-      setState("offline");
+      setState(error instanceof ApiError && error.kind === "timeout" ? "busy" : "offline");
     }
     setLastCheckedAt(new Date());
   }, []);

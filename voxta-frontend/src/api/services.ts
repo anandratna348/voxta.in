@@ -46,6 +46,7 @@ export const sessionsApi = {
       method: "PATCH",
       query: { owner_id: ownerId },
       json: { status },
+      timeoutMs: config.longRequestTimeoutMs,
     }),
 };
 

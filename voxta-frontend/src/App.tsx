@@ -4,6 +4,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
 import PlaceholderPage from "@/pages/PlaceholderPage";
+import WorkspacePage from "@/pages/WorkspacePage";
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route index element={<DashboardPage />} />
             {["/workspace", "/workspace/:sessionId"].map((p) => (
-              <Route key={p} path={p} element={<PlaceholderPage title="Meeting" description="Recording controls, microphone status and the live transcript." step="Built in step 3." />} />
+              <Route key={p} path={p} element={<WorkspacePage />} />
             ))}
             {["/copilot", "/copilot/:sessionId"].map((p) => (
               <Route key={p} path={p} element={<PlaceholderPage title="AI Copilot" description="Detected questions, suggested answers and answer history." step="Built in step 4." />} />
