@@ -1,0 +1,23 @@
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/fraunces";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-paper font-sans text-indigo-900 antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection { background: #E1D9F5; color: #1C1E45; }
+  :focus-visible { @apply outline-none shadow-focus; border-radius: 0.5rem; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #CBBEEE; border-radius: 999px; border: 3px solid #FBF9F6; }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
