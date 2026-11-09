@@ -17,7 +17,10 @@ import { useAsync } from "@/hooks/useAsync";
 import { useAudioDevices } from "@/hooks/useAudioDevices";
 import { useRecorder } from "@/hooks/useRecorder";
 import { useTranscriptionQueue } from "@/hooks/useTranscriptionQueue";
-import { getSavedDeviceId, saveDeviceId } from "@/lib/audio";
+import { getCaptureSpeakers, getSavedDeviceId, saveCaptureSpeakers, saveDeviceId } from "@/lib/audio";
+import { loadAuto, loadContext, saveAuto } from "@/lib/copilotStore";
+import { LiveCopilot } from "@/components/workspace/LiveCopilot";
+import { useCopilot } from "@/hooks/useCopilot";
 import { formatDateTime } from "@/lib/format";
 import { loadOffsets } from "@/lib/timeline";
 
@@ -76,7 +79,13 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
   const { devices, refresh } = useAudioDevices();
 
   const queue = useTranscriptionQueue({ ownerId, sessionId, onSaved: segQ.reload });
-  const recorder = useRecorder({ deviceId, onChunk: queue.enqueue });
+  const [captureSpeakers, setCaptureSpeakers] = useState(getCaptureSpeakers);
+  const recorder = useRecorder({ deviceId, captureSpeakers, onChunk: queue.enqueue });
+
+  const [auto, setAuto] = useState(loadAuto);
+  const [context] = useState(loadContext);
+  const copilot = useCopilot({ ownerId, sessionId, segments: segQ.data, context, auto });
+  const latestAnswer = copilot.answers.length > 0 ? copilot.answers[copilot.answers.length - 1] : null;
 
   const session = sessionQ.data;
   const status: SessionStatus = statusOverride ?? session?.status ?? "active";
@@ -161,6 +170,11 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
               setDeviceId(id);
               saveDeviceId(id);
             }}
+            captureSpeakers={captureSpeakers}
+            onCaptureSpeakersChange={(on) => {
+              setCaptureSpeakers(on);
+              saveCaptureSpeakers(on);
+            }}
             onStart={handleStart}
             onPause={handlePause}
             onResume={handleResume}
@@ -169,6 +183,20 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
             failedCount={queue.failedCount}
             uploadError={queue.lastError}
             onRetry={queue.retry}
+          />
+          <LiveCopilot
+            sessionId={sessionId}
+            latest={latestAnswer}
+            count={copilot.answers.length}
+            auto={auto}
+            onAutoChange={(on) => {
+              setAuto(on);
+              saveAuto(on);
+            }}
+            listening={recorder.state === "recording"}
+            analysing={copilot.pendingCount > 0 || queue.pending > 0}
+            fatal={copilot.fatal}
+            onDismissFatal={copilot.dismissFatal}
           />
           <TranscriptPanel
             segments={segQ.data}

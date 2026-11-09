@@ -1,6 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/context/AuthContext";
+import CopilotPage from "@/pages/CopilotPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
 import PlaceholderPage from "@/pages/PlaceholderPage";
@@ -18,7 +19,7 @@ export default function App() {
               <Route key={p} path={p} element={<WorkspacePage />} />
             ))}
             {["/copilot", "/copilot/:sessionId"].map((p) => (
-              <Route key={p} path={p} element={<PlaceholderPage title="AI Copilot" description="Detected questions, suggested answers and answer history." step="Built in step 4." />} />
+              <Route key={p} path={p} element={<CopilotPage />} />
             ))}
             <Route path="/history" element={<PlaceholderPage title="History" description="Search past meetings, reopen them and export PDF reports." step="Built in step 5." />} />
             <Route path="/settings" element={<PlaceholderPage title="Settings" description="Profile, audio preferences and application settings." step="Built in step 5." />} />

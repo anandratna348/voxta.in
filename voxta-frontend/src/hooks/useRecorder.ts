@@ -6,6 +6,8 @@ export type MicState = "unknown" | "ready" | "denied" | "unavailable" | "error";
 
 interface Options {
   deviceId?: string;
+  /** Keep speaker audio audible to the microphone by disabling echo cancellation. */
+  captureSpeakers?: boolean;
   /** Called with each finished audio part and where it began on the recording clock. */
   onChunk: (blob: Blob, offsetMs: number) => void;
 }
@@ -14,7 +16,7 @@ interface Options {
  * Records the microphone as a series of complete webm files. Each part is a
  * standalone file because the backend decodes every upload on its own.
  */
-export function useRecorder({ deviceId, onChunk }: Options) {
+export function useRecorder({ deviceId, captureSpeakers = true, onChunk }: Options) {
   const [state, setStateValue] = useState<RecorderState>("idle");
   const [mic, setMic] = useState<MicState>("unknown");
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,12 @@ export function useRecorder({ deviceId, onChunk }: Options) {
     }
     const attempt = (id?: string) =>
       navigator.mediaDevices.getUserMedia({
-        audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: true },
+        audio: {
+          deviceId: id ? { exact: id } : undefined,
+          echoCancellation: !captureSpeakers,
+          noiseSuppression: !captureSpeakers,
+          autoGainControl: true,
+        },
       });
     try {
       let stream: MediaStream;
@@ -105,7 +112,7 @@ export function useRecorder({ deviceId, onChunk }: Options) {
       }
       return null;
     }
-  }, [deviceId, attachMeter]);
+  }, [deviceId, captureSpeakers, attachMeter]);
 
   const beginPart = useCallback(() => {
     const stream = streamRef.current;

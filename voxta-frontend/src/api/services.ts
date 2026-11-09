@@ -80,6 +80,19 @@ export const transcriptsApi = {
     }),
 };
 
+export const agentApi = {
+  /**
+   * Detects whether text is an interviewer question and drafts an answer.
+   * The backend does not save these answers to the meeting history.
+   */
+  processText: (userId: string, text: string, context: string) =>
+    request<ProcessResult>("/agent/process-transcript", {
+      method: "POST",
+      json: { user_id: userId, text, context },
+      timeoutMs: config.longRequestTimeoutMs,
+    }),
+};
+
 export const transcriptionApi = {
   /** Transcribes one audio file and saves the resulting segments to the session. */
   transcribeIntoSession: (ownerId: string, sessionId: string, audio: Blob, filename: string) => {

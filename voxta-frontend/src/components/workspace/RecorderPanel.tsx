@@ -3,6 +3,7 @@ import { AlertTriangle, Mic, Pause, Play, RefreshCw, Square } from "lucide-react
 import { useEffect, useState } from "react";
 import type { MicState, RecorderState } from "@/hooks/useRecorder";
 import { Button } from "@/components/ui/Button";
+import { Switch } from "@/components/ui/Switch";
 import { formatTimestamp } from "@/lib/format";
 
 const BARS = Array.from({ length: 36 }, (_, i) => 0.3 + 0.7 * Math.abs(Math.sin(i * 0.65)));
@@ -51,6 +52,8 @@ interface Props {
   devices: MediaDeviceInfo[];
   deviceId?: string;
   onDeviceChange: (id: string | undefined) => void;
+  captureSpeakers: boolean;
+  onCaptureSpeakersChange: (on: boolean) => void;
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -135,6 +138,19 @@ export function RecorderPanel(p: Props) {
           ))}
         </select>
         <p className="mt-2 text-xs text-indigo-400">Records your microphone only. Names appear after you allow access once.</p>
+
+        <div className="mt-4 flex items-start justify-between gap-4 rounded-xl bg-lavender-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-indigo-800">Pick up speaker audio</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-indigo-400">
+              Turns off echo cancellation so the interviewer, heard through your speakers, reaches the transcript.
+              Headphones will hide them. Direct meeting audio capture is awaiting support.
+            </p>
+          </div>
+          <div className={started ? "pointer-events-none opacity-60" : ""}>
+            <Switch checked={p.captureSpeakers} onChange={p.onCaptureSpeakersChange} label="Pick up speaker audio" />
+          </div>
+        </div>
       </div>
 
       {p.error && (

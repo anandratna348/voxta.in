@@ -25,10 +25,10 @@ export function MeetingCard({ session }: { session: MeetingSession }) {
   );
 }
 
-export function MeetingRow({ session }: { session: MeetingSession }) {
+export function MeetingRow({ session, to }: { session: MeetingSession; to?: string }) {
   const duration = formatDuration(session.started_at, session.ended_at);
   return (
-    <Link to={`/workspace/${session.id}`} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-lavender-50">
+    <Link to={to ?? `/workspace/${session.id}`} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-lavender-50">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-indigo-900">{session.title}</p>
         <p className="mt-0.5 text-xs text-indigo-400">
