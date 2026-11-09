@@ -4,7 +4,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { config } from "@/api/config";
 import { toErrorMessage } from "@/api/errors";
 import { authApi } from "@/api/services";
-import { BrandMark } from "@/components/layout/Sidebar";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { openExternal } from "@/lib/external";
@@ -62,10 +62,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-full bg-paper lg:grid-cols-[1.05fr_1fr]">
       <section className="hidden flex-col justify-between bg-brand-gradient p-14 text-white lg:flex">
-        <div className="flex items-center gap-3">
-          <BrandMark className="h-10 w-10 bg-white/15 text-xl shadow-none" />
-          <span className="font-display text-2xl">Voxta</span>
-        </div>
+        <BrandLogo tone="light" size="lg" />
         <div className="max-w-md">
           <h1 className="font-display text-5xl leading-[1.1]">Walk into every interview prepared.</h1>
           <p className="mt-5 text-lg leading-relaxed text-indigo-100">
@@ -80,10 +77,7 @@ export default function LoginPage() {
 
       <section className="flex items-center justify-center bg-wash p-8">
         <div className="w-full max-w-sm">
-          <div className="mb-10 flex items-center gap-3 lg:hidden">
-            <BrandMark className="h-9 w-9 text-xl" />
-            <span className="font-display text-2xl text-indigo-900">Voxta</span>
-          </div>
+          <BrandLogo size="lg" className="mb-10 lg:hidden" />
 
           <h2 className="font-display text-3xl text-indigo-900">Welcome back</h2>
           <p className="mt-2 text-indigo-500">Sign in to open your meetings and copilot.</p>

@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { History, LayoutDashboard, LogOut, Mic, RefreshCw, Settings, Sparkles } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useAuth } from "@/context/AuthContext";
 import type { BackendStatus } from "@/hooks/useBackendStatus";
 
@@ -15,24 +16,13 @@ const nav = [
 const statusText = { checking: "Checking backend", online: "Backend connected", busy: "Backend busy", offline: "Backend offline" } as const;
 const statusDot = { checking: "bg-amber-500", online: "bg-sage-500", busy: "bg-amber-500", offline: "bg-rose-500" } as const;
 
-export function BrandMark({ className }: { className?: string }) {
-  return (
-    <div className={clsx("flex items-center justify-center rounded-xl bg-brand-gradient font-display text-white shadow-card", className)}>
-      V
-    </div>
-  );
-}
-
 export function Sidebar({ backend }: { backend: BackendStatus }) {
   const { user, signOut } = useAuth();
   const initial = (user?.name || "V").charAt(0).toUpperCase();
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-paper-line bg-paper-raised px-4 py-6">
-      <div className="flex items-center gap-3 px-2">
-        <BrandMark className="h-9 w-9 text-xl" />
-        <span className="font-display text-2xl text-indigo-900">Voxta</span>
-      </div>
+      <BrandLogo className="px-2" />
 
       <nav className="mt-8 flex flex-1 flex-col gap-1" aria-label="Main">
         {nav.map(({ to, label, icon: Icon, end }) => (
