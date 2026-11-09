@@ -2,9 +2,10 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/context/AuthContext";
 import CopilotPage from "@/pages/CopilotPage";
+import HistoryPage from "@/pages/HistoryPage";
+import SettingsPage from "@/pages/SettingsPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
-import PlaceholderPage from "@/pages/PlaceholderPage";
 import WorkspacePage from "@/pages/WorkspacePage";
 
 export default function App() {
@@ -21,8 +22,8 @@ export default function App() {
             {["/copilot", "/copilot/:sessionId"].map((p) => (
               <Route key={p} path={p} element={<CopilotPage />} />
             ))}
-            <Route path="/history" element={<PlaceholderPage title="History" description="Search past meetings, reopen them and export PDF reports." step="Built in step 5." />} />
-            <Route path="/settings" element={<PlaceholderPage title="Settings" description="Profile, audio preferences and application settings." step="Built in step 5." />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

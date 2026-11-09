@@ -6,6 +6,8 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "dialog:default",
+    "fs:allow-write-file",
     {
       "identifier": "http:default",
       "allow": [
