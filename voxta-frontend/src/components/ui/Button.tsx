@@ -12,8 +12,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: "bg-brand-gradient text-white shadow-card hover:shadow-lift",
-  secondary: "border border-paper-line bg-paper-raised text-indigo-800 hover:bg-lavender-50",
+  primary: "bg-brand-gradient text-white shadow-btn hover:brightness-110 active:brightness-95",
+  secondary: "border border-paper-line bg-paper-raised text-indigo-800 shadow-card hover:border-lavender-300 hover:bg-lavender-50",
   ghost: "text-indigo-600 hover:bg-lavender-100",
   light: "bg-white text-indigo-800 shadow-card hover:shadow-lift",
 };
@@ -23,7 +23,7 @@ export function Button({ variant = "primary", size = "md", loading, icon, classN
     <button
       disabled={disabled || loading}
       className={clsx(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-shadow duration-200",
+        "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition duration-150",
         "disabled:cursor-not-allowed disabled:opacity-60",
         size === "md" ? "h-10 px-4 text-sm" : "h-12 px-6 text-[15px]",
         variants[variant],

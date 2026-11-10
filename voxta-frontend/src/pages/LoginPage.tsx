@@ -5,6 +5,7 @@ import { config } from "@/api/config";
 import { toErrorMessage } from "@/api/errors";
 import { authApi } from "@/api/services";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { Equalizer } from "@/components/brand/Equalizer";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { openExternal } from "@/lib/external";
@@ -61,10 +62,11 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-full bg-paper lg:grid-cols-[1.05fr_1fr]">
-      <section className="hidden flex-col justify-between bg-brand-gradient p-14 text-white lg:flex">
+      <section className="relative hidden flex-col justify-between overflow-hidden bg-hero-gradient p-14 text-white lg:flex">
+        <Equalizer className="pointer-events-none absolute -right-4 bottom-0 h-[55%] w-64 pr-16" />
         <BrandLogo tone="light" size="lg" />
-        <div className="max-w-md">
-          <h1 className="font-display text-5xl leading-[1.1]">Walk into every interview prepared.</h1>
+        <div className="relative max-w-md">
+          <h1 className="font-display text-5xl leading-[1.08] tracking-tight">Walk into every interview prepared.</h1>
           <p className="mt-5 text-lg leading-relaxed text-indigo-100">
             Voxta follows the conversation, spots the questions, and drafts answers you can say in your own voice.
           </p>
@@ -79,7 +81,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <BrandLogo size="lg" className="mb-10 lg:hidden" />
 
-          <h2 className="font-display text-3xl text-indigo-900">Welcome back</h2>
+          <h2 className="font-display text-3xl text-indigo-950">Welcome back</h2>
           <p className="mt-2 text-indigo-500">Sign in to open your meetings and copilot.</p>
 
           <button

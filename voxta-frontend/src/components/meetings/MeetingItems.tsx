@@ -11,7 +11,9 @@ export function MeetingCard({ session }: { session: MeetingSession }) {
       to={`/workspace/${session.id}`}
       className="group flex flex-col rounded-xl2 border border-paper-line bg-paper-raised p-5 shadow-card transition-shadow hover:shadow-lift"
     >
-      <StatusPill status={session.status} />
+      <div className="self-start">
+        <StatusPill status={session.status} />
+      </div>
       <h3 className="mt-4 line-clamp-2 text-base font-semibold leading-snug text-indigo-900">{session.title}</h3>
       <p className="mt-1 text-sm text-indigo-400">{formatDateTime(session.started_at)}</p>
       <div className="mt-5 flex items-center justify-between text-sm text-indigo-500">

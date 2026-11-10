@@ -31,7 +31,7 @@ export function SettingsCard({ auto, onAutoChange, context, onContextChange, onC
           aria-checked={auto}
           aria-label="Auto detect questions"
           onClick={() => onAutoChange(!auto)}
-          className={clsx("relative h-6 w-11 shrink-0 rounded-full transition-colors", auto ? "bg-indigo-500" : "bg-lavender-300")}
+          className={clsx("relative h-6 w-11 shrink-0 rounded-full transition-colors", auto ? "bg-brand-gradient" : "bg-lavender-300")}
         >
           <span className={clsx("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-card transition-all", auto ? "left-[22px]" : "left-0.5")} />
         </button>

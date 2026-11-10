@@ -48,7 +48,7 @@ export function SessionInfoPanel({ session, status, segments, elapsedMs }: Props
 
       <section className="rounded-xl2 border border-paper-line bg-paper-raised p-6 shadow-card">
         <h2 className="text-base font-semibold text-indigo-900">What works today</h2>
-        <ul className="mt-3 space-y-3 text-sm text-indigo-700">
+        <ul className="mt-3 space-y-3 text-sm text-indigo-800">
           <li className="flex items-center justify-between gap-3">Microphone recording <FeatureBadge available /></li>
           <li className="flex items-center justify-between gap-3">Timed transcript saving <FeatureBadge available /></li>
           <li className="flex items-center justify-between gap-3">Pause, resume and end <FeatureBadge available /></li>

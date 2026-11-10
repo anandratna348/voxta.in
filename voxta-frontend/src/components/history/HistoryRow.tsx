@@ -23,11 +23,13 @@ export function HistoryRow({ session, exporting, onExport }: Props) {
           {duration ? `, ${duration}` : ""}
         </p>
       </div>
-      <StatusPill status={session.status} />
+      <div className="w-28">
+        <StatusPill status={session.status} />
+      </div>
       <div className="flex items-center gap-2">
         <Link
           to={`/workspace/${session.id}`}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-paper-line bg-paper-raised px-4 text-sm font-semibold text-indigo-800 hover:bg-lavender-50"
+          className="inline-flex h-10 min-w-[7.5rem] items-center justify-center gap-2 rounded-xl border border-paper-line bg-paper-raised px-4 text-sm font-semibold text-indigo-800 shadow-card transition hover:border-lavender-300 hover:bg-lavender-50"
         >
           <Play className="h-4 w-4" />
           {done ? "Reopen" : "Resume"}

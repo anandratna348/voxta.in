@@ -14,7 +14,7 @@ function AppShell() {
   const backend = useBackendStatus();
 
   return (
-    <div className="flex h-full bg-paper">
+    <div className="flex h-full app-backdrop">
       <Sidebar backend={backend} />
       <div className="flex min-w-0 flex-1 flex-col">
         {backend.state === "offline" && (

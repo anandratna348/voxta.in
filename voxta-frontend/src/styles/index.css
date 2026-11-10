@@ -1,5 +1,4 @@
 @import "@fontsource-variable/manrope";
-@import "@fontsource-variable/fraunces";
 
 @tailwind base;
 @tailwind components;
@@ -11,11 +10,22 @@
     @apply bg-paper font-sans text-indigo-900 antialiased;
     font-feature-settings: "cv11", "ss01";
   }
-  ::selection { background: #E1D9F5; color: #1C1E45; }
-  :focus-visible { @apply outline-none shadow-focus; border-radius: 0.5rem; }
+  ::selection { background: #DED8FD; color: #141527; }
+  :focus-visible { @apply outline-none shadow-focus; border-radius: 0.6rem; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: #CBBEEE; border-radius: 999px; border: 3px solid #FBF9F6; }
+  ::-webkit-scrollbar-thumb { background: #C5BBFA; border-radius: 999px; border: 3px solid #F7F8FC; }
   ::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* Headings use the same geometric sans as the logo lettering */
+.font-display { font-weight: 700; letter-spacing: -0.02em; }
+
+/* Soft brand glow behind the page content */
+.app-backdrop {
+  background:
+    radial-gradient(48rem 22rem at 85% -8%, rgba(187, 103, 252, 0.10), transparent 70%),
+    radial-gradient(36rem 20rem at 0% 0%, rgba(21, 157, 252, 0.08), transparent 70%),
+    #F7F8FC;
 }
 
 @media (prefers-reduced-motion: reduce) {
