@@ -41,6 +41,8 @@ def _exchange_code(code: str, verifier: str) -> dict:
         "grant_type": "authorization_code",
         "redirect_uri": REDIRECT_URI,
     }
+    if settings.google_client_secret:
+        payload["client_secret"] = settings.google_client_secret
 
     request = Request(
         GOOGLE_TOKEN_URL,
@@ -52,7 +54,11 @@ def _exchange_code(code: str, verifier: str) -> dict:
     try:
         with urlopen(request, timeout=15) as response:
             token_data = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")[:300]
+        print("Google token exchange error:", exc.code, detail)
+        raise ValueError("Google authorization-code exchange failed.") from exc
+    except (URLError, TimeoutError, ValueError) as exc:
         raise ValueError("Google authorization-code exchange failed.") from exc
 
     id_token_value = token_data.get("id_token")
