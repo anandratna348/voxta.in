@@ -8,10 +8,11 @@ import { formatDateTime, formatDuration } from "@/lib/format";
 interface Props {
   session: MeetingSession;
   exporting: boolean;
+  canExport: boolean;
   onExport: (session: MeetingSession) => void;
 }
 
-export function HistoryRow({ session, exporting, onExport }: Props) {
+export function HistoryRow({ session, exporting, canExport, onExport }: Props) {
   const duration = formatDuration(session.started_at, session.ended_at);
   const done = session.status === "completed";
   return (
@@ -42,7 +43,14 @@ export function HistoryRow({ session, exporting, onExport }: Props) {
         >
           <Sparkles className="h-4 w-4" />
         </Link>
-        <Button variant="secondary" onClick={() => onExport(session)} loading={exporting} icon={<FileDown className="h-4 w-4" />}>
+        <Button
+          variant="secondary"
+          onClick={() => onExport(session)}
+          loading={exporting}
+          disabled={!canExport}
+          title={canExport ? undefined : "PDF export is not included in your plan"}
+          icon={<FileDown className="h-4 w-4" />}
+        >
           Export PDF
         </Button>
       </div>

@@ -2,7 +2,6 @@ import { config } from "./config";
 import { request, requestBlob } from "./http";
 import type {
   AiAnswer,
-  GoogleLoginStart,
   HealthResponse,
   MeetingSession,
   ProcessResult,
@@ -10,7 +9,6 @@ import type {
   SessionStatus,
   SessionStatusResult,
   TranscriptSegment,
-  User,
 } from "./types";
 
 /**
@@ -21,14 +19,6 @@ import type {
 export const healthApi = {
   check: (signal?: AbortSignal) =>
     request<HealthResponse>("", { absoluteUrl: config.healthUrl, signal, timeoutMs: 5000 }),
-};
-
-export const authApi = {
-  /** Starts the system-browser Google flow. The backend finishes sign-in on its own callback port. */
-  startGoogleLogin: () => request<GoogleLoginStart>("/auth/google/start"),
-  /** Exchanges a Google ID token for a Voxta user. */
-  loginWithIdToken: (idToken: string) =>
-    request<User>("/auth/google", { method: "POST", json: { id_token: idToken } }),
 };
 
 export const sessionsApi = {

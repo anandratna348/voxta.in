@@ -21,5 +21,9 @@ export const config = {
   requestTimeoutMs: 45000,
   /** Transcription and AI calls can take much longer than normal requests. */
   longRequestTimeoutMs: 120000,
-  devLoginEnabled: env.VITE_ENABLE_DEV_LOGIN === "true",
+  /** Public license settings. The public key is not a secret, it only verifies signatures. */
+  licenseApiUrl: (env.VITE_LICENSE_API_URL ?? "").trim(),
+  licensePublicKey: (env.VITE_LICENSE_PUBLIC_KEY ?? "").trim(),
+  purchaseUrl: (env.VITE_PURCHASE_URL ?? "").trim(),
+  appVersion: "0.1.0",
 } as const;

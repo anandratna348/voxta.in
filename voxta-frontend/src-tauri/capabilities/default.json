@@ -5,6 +5,8 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:allow-set-focus",
+    "core:window:allow-unminimize",
     "opener:default",
     "dialog:default",
     "fs:allow-write-file",
@@ -12,7 +14,9 @@
       "identifier": "http:default",
       "allow": [
         { "url": "http://127.0.0.1:8765/*" },
-        { "url": "http://localhost:8765/*" }
+        { "url": "http://localhost:8765/*" },
+        { "url": "http://127.0.0.1:8790/*" },
+        { "url": "http://localhost:8790/*" }
       ]
     }
   ]

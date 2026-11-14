@@ -1,7 +1,7 @@
 import clsx from "clsx";
-import { History, LayoutDashboard, LogOut, Mic, Plus, RefreshCw, Settings, Sparkles } from "lucide-react";
+import { History, LayoutDashboard, Mic, Plus, RefreshCw, Settings, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { NewMeetingDialog } from "@/components/meetings/NewMeetingDialog";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +20,7 @@ const statusText = { checking: "Checking backend", online: "Backend connected", 
 const statusDot = { checking: "bg-amber-500", online: "bg-sage-500", busy: "bg-amber-500", offline: "bg-rose-500" } as const;
 
 export function Sidebar({ backend }: { backend: BackendStatus }) {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [dialog, setDialog] = useState(false);
   const initial = (user?.name || "V").charAt(0).toUpperCase();
 
@@ -69,22 +69,19 @@ export function Sidebar({ backend }: { backend: BackendStatus }) {
           <RefreshCw className="h-3.5 w-3.5 text-indigo-400" />
         </button>
 
-        <div className="flex items-center gap-3 rounded-xl border-t border-paper-line px-2 pt-4">
-          {user?.picture ? (
-            <img src={user.picture} alt="" referrerPolicy="no-referrer" className="h-9 w-9 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gradient text-sm font-bold text-white">
-              {initial}
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-indigo-900">{user?.name || "Local user"}</p>
-            <p className="truncate text-xs text-indigo-400">{user?.isDevSession ? "Development session" : user?.email}</p>
+        <Link
+          to="/settings"
+          title="License and settings"
+          className="flex items-center gap-3 rounded-xl border-t border-paper-line px-2 pt-4 transition-colors hover:opacity-80"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gradient text-sm font-bold text-white">
+            {initial}
           </div>
-          <button onClick={signOut} aria-label="Sign out" title="Sign out" className="rounded-lg p-2 text-indigo-400 transition-colors hover:bg-indigo-50 hover:text-indigo-700">
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-indigo-900">{user?.name || "Voxta"}</p>
+            <p className="truncate text-xs text-indigo-400">{user?.email} plan</p>
+          </div>
+        </Link>
       </div>
 
       {dialog && <NewMeetingDialog onClose={() => setDialog(false)} />}

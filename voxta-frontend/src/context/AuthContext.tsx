@@ -1,49 +1,27 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import type { User } from "@/api/types";
+import { useMemo } from "react";
+import { useLicense } from "@/license/LicenseContext";
 
-export interface AuthUser extends User {
-  /** True for the local development session. It is not real authentication. */
-  isDevSession?: boolean;
+/**
+ * The app used to sign in with Google. It now runs on a license. This keeps the small
+ * `useAuth()` surface the screens already use: `user.id` owns local meetings and is the license id.
+ */
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  picture: string;
 }
 
-interface AuthContextValue {
-  user: AuthUser | null;
-  signIn: (user: AuthUser) => void;
-  signOut: () => void;
-}
-
-const STORAGE_KEY = "voxta.user.v1";
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-function readStoredUser(): AuthUser | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Only the public profile is stored. No tokens or secrets ever touch the frontend. */
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(readStoredUser);
-
-  const signIn = useCallback((next: AuthUser) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setUser(next);
-  }, []);
-
-  const signOut = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
-  }, []);
-
-  const value = useMemo(() => ({ user, signIn, signOut }), [user, signIn, signOut]);
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
+export function useAuth(): { user: AppUser | null } {
+  const { status, entitlement } = useLicense();
+  const user = useMemo<AppUser | null>(() => {
+    if (status !== "active" || !entitlement) return null;
+    return {
+      id: entitlement.lic,
+      name: entitlement.holder || entitlement.plan_name || "Voxta license",
+      email: entitlement.plan_name || entitlement.plan,
+      picture: "",
+    };
+  }, [status, entitlement]);
+  return { user };
 }

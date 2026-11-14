@@ -20,6 +20,9 @@ import { useTranscriptionQueue } from "@/hooks/useTranscriptionQueue";
 import { getCaptureSpeakers, getSavedDeviceId, saveCaptureSpeakers, saveDeviceId } from "@/lib/audio";
 import { loadAuto, loadContext, saveAuto } from "@/lib/copilotStore";
 import { LiveCopilot } from "@/components/workspace/LiveCopilot";
+import { UpgradeNotice } from "@/components/license/FeatureGate";
+import { useLicense } from "@/license/LicenseContext";
+import { FEATURES } from "@/license/types";
 import { useCopilot } from "@/hooks/useCopilot";
 import { formatDateTime } from "@/lib/format";
 import { loadOffsets } from "@/lib/timeline";
@@ -84,7 +87,8 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
 
   const [auto, setAuto] = useState(loadAuto);
   const [context] = useState(loadContext);
-  const copilot = useCopilot({ ownerId, sessionId, segments: segQ.data, context, auto });
+  const copilotAllowed = useLicense().has(FEATURES.aiCopilot);
+  const copilot = useCopilot({ ownerId, sessionId, segments: segQ.data, context, auto: auto && copilotAllowed });
   const latestAnswer = copilot.answers.length > 0 ? copilot.answers[copilot.answers.length - 1] : null;
 
   const session = sessionQ.data;
@@ -184,6 +188,7 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
             uploadError={queue.lastError}
             onRetry={queue.retry}
           />
+          {copilotAllowed ? (
           <LiveCopilot
             sessionId={sessionId}
             latest={latestAnswer}
@@ -198,6 +203,9 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
             fatal={copilot.fatal}
             onDismissFatal={copilot.dismissFatal}
           />
+          ) : (
+            <UpgradeNotice compact title="AI Copilot is not in your plan" description="Live question detection and suggested answers need a plan that includes AI Copilot." />
+          )}
           <TranscriptPanel
             segments={segQ.data}
             offsets={offsets}

@@ -1,5 +1,5 @@
 import { config, isTauri } from "./config";
-import { ApiError, readDetail } from "./errors";
+import { ApiError, readCode, readDetail } from "./errors";
 
 type FetchFn = typeof fetch;
 let cachedFetch: Promise<FetchFn> | null = null;
@@ -58,12 +58,15 @@ async function send(path: string, options: RequestOptions): Promise<Response> {
 
     if (!response.ok) {
       let message = `Request failed (${response.status}).`;
+      let code: string | null = null;
       try {
-        message = readDetail(await response.json()) ?? message;
+        const body: unknown = await response.json();
+        message = readDetail(body) ?? message;
+        code = readCode(body);
       } catch {
         /* body was not JSON, keep the generic message */
       }
-      throw new ApiError("http", message, response.status);
+      throw new ApiError("http", message, response.status, code);
     }
     return response;
   } catch (error) {

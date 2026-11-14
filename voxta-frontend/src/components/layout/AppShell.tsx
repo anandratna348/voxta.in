@@ -1,17 +1,21 @@
 import { WifiOff } from "lucide-react";
 import { Navigate, Outlet } from "react-router-dom";
 import { config } from "@/api/config";
-import { useAuth } from "@/context/AuthContext";
 import { useBackendStatus } from "@/hooks/useBackendStatus";
+import { useLicense } from "@/license/LicenseContext";
 import { Sidebar } from "./Sidebar";
+import { Splash } from "./Splash";
 
+/** Everything except the activation screen needs a valid license. */
 export function RequireAuth() {
-  const { user } = useAuth();
-  return user ? <AppShell /> : <Navigate to="/login" replace />;
+  const { status } = useLicense();
+  if (status === "loading") return <Splash />;
+  return status === "active" ? <AppShell /> : <Navigate to="/activate" replace />;
 }
 
 function AppShell() {
   const backend = useBackendStatus();
+  const { warning } = useLicense();
 
   return (
     <div className="flex h-full app-backdrop">
@@ -26,6 +30,11 @@ function AppShell() {
             <button onClick={backend.recheck} className="font-semibold underline underline-offset-2">
               Check again
             </button>
+          </div>
+        )}
+        {warning && (
+          <div role="status" className="border-b border-amber-100 bg-amber-50 px-8 py-3 text-sm text-amber-700">
+            {warning}
           </div>
         )}
         <main className="min-h-0 flex-1 overflow-y-auto">

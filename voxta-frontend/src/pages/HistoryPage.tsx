@@ -11,6 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useAsync } from "@/hooks/useAsync";
 import { formatDateTime } from "@/lib/format";
 import { safeFileName, savePdf } from "@/lib/saveFile";
+import { useLicense } from "@/license/LicenseContext";
+import { FEATURES } from "@/license/types";
 
 type Filter = "all" | SessionStatus;
 const FILTERS: { value: Filter; label: string }[] = [
@@ -23,6 +25,7 @@ const LIMIT = 50;
 
 export default function HistoryPage() {
   const { user } = useAuth();
+  const canExport = useLicense().has(FEATURES.pdfExport);
   const { data, error, loading, reload } = useAsync((s) => sessionsApi.list(user!.id, LIMIT, s), [user?.id]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -40,6 +43,7 @@ export default function HistoryPage() {
   const count = (f: Filter) => (data ?? []).filter((s) => f === "all" || s.status === f).length;
 
   async function exportPdf(session: MeetingSession) {
+    if (!canExport) return;
     setExportingId(session.id);
     setMessage(null);
     try {
@@ -116,7 +120,7 @@ export default function HistoryPage() {
         />
       ) : (
         <ul className="divide-y divide-paper-line overflow-hidden rounded-xl2 border border-paper-line bg-paper-raised shadow-card">
-          {rows.map((s) => <HistoryRow key={s.id} session={s} exporting={exportingId === s.id} onExport={exportPdf} />)}
+          {rows.map((s) => <HistoryRow key={s.id} session={s} exporting={exportingId === s.id} canExport={canExport} onExport={exportPdf} />)}
         </ul>
       )}
 

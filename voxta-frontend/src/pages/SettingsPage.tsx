@@ -1,4 +1,4 @@
-import { LogOut, Mic, RefreshCw, Square, Trash2 } from "lucide-react";
+import { Mic, RefreshCw, Square, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { config } from "@/api/config";
 import { Section, Row } from "@/components/settings/Section";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { FeatureBadge } from "@/components/ui/FeatureBadge";
 import { LevelBars } from "@/components/ui/LevelBars";
 import { Switch } from "@/components/ui/Switch";
-import { useAuth } from "@/context/AuthContext";
+import { useLicense } from "@/license/LicenseContext";
 import { useAudioDevices } from "@/hooks/useAudioDevices";
 import { useBackendStatus } from "@/hooks/useBackendStatus";
 import { useMicTest } from "@/hooks/useMicTest";
@@ -20,24 +20,33 @@ const stateDot = { checking: "bg-amber-500", online: "bg-sage-500", busy: "bg-am
 const inputCls =
   "h-11 w-64 max-w-full rounded-xl border border-paper-line bg-paper px-3 text-sm text-indigo-900 focus:border-lavender-400 focus:outline-none focus:shadow-focus";
 
+const FEATURE_LABELS: Record<string, string> = {
+  meetings: "Meetings",
+  ai_copilot: "AI Copilot",
+  pdf_export: "PDF export",
+};
+
 const AWAITING = [
-  "Edit profile details",
+  "License checks inside the local backend",
   "Set or change the Gemini API key",
   "Delete a meeting",
   "Search inside transcripts",
   "Word by word live transcription",
   "Speaker labels",
   "Capture meeting app audio",
-  "Sign in with Google inside the app",
 ];
 
 export default function SettingsPage() {
-  const { user, signIn, signOut } = useAuth();
+  const license = useLicense();
+  const { entitlement } = license;
   const backend = useBackendStatus();
   const { devices, refresh } = useAudioDevices();
 
-  const [name, setName] = useState(user?.name ?? "");
-  const [nameSaved, setNameSaved] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [checkNote, setCheckNote] = useState<string | null>(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
+  const [deactivateError, setDeactivateError] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState<string | undefined>(getSavedDeviceId);
   const [speakers, setSpeakers] = useState(getCaptureSpeakers);
   const [auto, setAuto] = useState(loadAuto);
@@ -55,54 +64,94 @@ export default function SettingsPage() {
     if (test.active) void refresh();
   }, [test.active, refresh]);
 
-  if (!user) return null;
-  const initial = (user.name || "V").charAt(0).toUpperCase();
+  useEffect(() => {
+    if (!confirmDeactivate) return;
+    const id = window.setTimeout(() => setConfirmDeactivate(false), 6000);
+    return () => window.clearTimeout(id);
+  }, [confirmDeactivate]);
+
+  if (!entitlement) return null;
+  const when = (seconds: number) => formatDateTime(new Date(seconds * 1000).toISOString());
+
+  async function checkNow() {
+    setChecking(true);
+    setCheckNote(null);
+    await license.refresh();
+    setCheckNote("Checked just now.");
+    setChecking(false);
+  }
+
+  async function deactivate(localOnly = false) {
+    setDeactivating(true);
+    setDeactivateError(null);
+    try {
+      await license.deactivate({ localOnly });
+    } catch (e) {
+      setDeactivateError(e instanceof Error ? e.message : "Deactivation failed.");
+      setDeactivating(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header>
         <h1 className="font-display text-4xl text-indigo-900">Settings</h1>
-        <p className="mt-2 text-indigo-500">Your account, audio and application preferences.</p>
+        <p className="mt-2 text-indigo-500">Your license, audio and application preferences.</p>
       </header>
 
-      <Section title="Account" description="Who you are signed in as.">
-        <div className="flex items-center gap-4 py-5">
-          {user.picture ? (
-            <img src={user.picture} alt="" referrerPolicy="no-referrer" className="h-14 w-14 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lavender-200 text-xl font-bold text-indigo-700">{initial}</div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold text-indigo-900">{user.name || "Local user"}</p>
-            <p className="truncate text-sm text-indigo-400">{user.email || "No email on this session"}</p>
+      <Section title="License" description="Your plan and how this computer is activated.">
+        <Row label="Plan" hint={license.warning ?? undefined}>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-900">
+            {entitlement.plan_name || entitlement.plan}
+            <span className="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-semibold text-sage-700">Active</span>
+          </span>
+        </Row>
+        <Row label="Licensed to">
+          <span className="text-sm font-semibold text-indigo-800">{entitlement.holder || "Not provided"}</span>
+        </Row>
+        <Row label="License valid until">
+          <span className="text-sm font-semibold text-indigo-800">{entitlement.license_expires ? when(entitlement.license_expires) : "No end date"}</span>
+        </Row>
+        <Row label="Works offline until" hint="Voxta checks your license online regularly and renews this date.">
+          <span className="text-sm font-semibold text-indigo-800">{when(entitlement.exp)}</span>
+        </Row>
+        <Row label="Last online check">
+          <span className="text-sm font-semibold text-indigo-800">{license.lastCheckedAt ? formatDateTime(new Date(license.lastCheckedAt).toISOString()) : "Not yet"}</span>
+        </Row>
+        <Row label="This computer">
+          <span className="font-mono text-sm font-semibold text-indigo-800">{entitlement.device.slice(0, 8)}</span>
+        </Row>
+        <div className="py-5">
+          <p className="text-sm font-semibold text-indigo-800">Included features</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {entitlement.features.map((f) => (
+              <span key={f} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">{FEATURE_LABELS[f] ?? f}</span>
+            ))}
           </div>
-          <Button variant="secondary" onClick={signOut} icon={<LogOut className="h-4 w-4" />}>Sign out</Button>
         </div>
-        <Row label="Sign-in method" hint={user.isDevSession ? "A local test session. It is not authentication." : undefined}>
-          <span className="text-sm font-semibold text-indigo-800">{user.isDevSession ? "Development session" : "Google"}</span>
+        <Row label="Check license now" hint={checkNote ?? "Contacts the license server and renews your offline access."}>
+          <Button variant="secondary" loading={checking} onClick={checkNow} icon={<RefreshCw className="h-4 w-4" />}>Check now</Button>
         </Row>
-        <Row label="Member since">
-          <span className="text-sm font-semibold text-indigo-800">{formatDateTime(user.created_at)}</span>
+        <Row label="Deactivate this computer" hint="Frees an activation so you can use the license elsewhere. Voxta locks until you activate again.">
+          {confirmDeactivate ? (
+            <div className="flex gap-2">
+              <Button variant="secondary" className="!border-rose-100 !bg-rose-50 !text-rose-700" loading={deactivating} onClick={() => void deactivate()}>
+                Confirm deactivate
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirmDeactivate(false)}>Cancel</Button>
+            </div>
+          ) : (
+            <Button variant="secondary" onClick={() => setConfirmDeactivate(true)}>Deactivate</Button>
+          )}
         </Row>
-        {user.isDevSession ? (
-          <Row label="Display name" hint="Stored on this computer only.">
-            <form
-              className="flex gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                signIn({ ...user, name: name.trim() || "Developer" });
-                setNameSaved(true);
-                window.setTimeout(() => setNameSaved(false), 1800);
-              }}
-            >
-              <input value={name} onChange={(e) => setName(e.target.value)} aria-label="Display name" className={inputCls} />
-              <Button type="submit" variant="secondary">{nameSaved ? "Saved" : "Save"}</Button>
-            </form>
-          </Row>
-        ) : (
-          <Row label="Profile details" hint="Name and photo come from your Google account.">
-            <FeatureBadge available={false} />
-          </Row>
+        {deactivateError && (
+          <div role="alert" className="py-4 text-sm text-rose-700">
+            <p>{deactivateError}</p>
+            <button onClick={() => void deactivate(true)} className="mt-2 font-semibold underline underline-offset-2">
+              Remove from this computer only
+            </button>
+            <p className="mt-1 text-xs text-rose-700/80">This does not free the activation on the server.</p>
+          </div>
         )}
       </Section>
 
