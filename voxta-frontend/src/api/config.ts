@@ -17,7 +17,7 @@ export const config = {
   apiBaseUrl: useDevProxy ? "/api/v1" : directBase,
   healthUrl: useDevProxy ? "/health" : `${new URL(directBase).origin}/health`,
   displayBackendUrl: directBase,
-  healthPollMs: Number(env.VITE_HEALTH_POLL_MS ?? 15000),
+  healthPollMs: Math.max(5000, Number(env.VITE_HEALTH_POLL_MS) || 15000),
   requestTimeoutMs: 45000,
   /** Transcription and AI calls can take much longer than normal requests. */
   longRequestTimeoutMs: 120000,
