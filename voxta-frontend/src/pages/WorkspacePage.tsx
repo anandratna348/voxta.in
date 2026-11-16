@@ -21,6 +21,8 @@ import { getCaptureSpeakers, getSavedDeviceId, saveCaptureSpeakers, saveDeviceId
 import { loadAuto, loadContext, saveAuto } from "@/lib/copilotStore";
 import { LiveCopilot } from "@/components/workspace/LiveCopilot";
 import { UpgradeNotice } from "@/components/license/FeatureGate";
+import { OverlayToggle } from "@/components/overlay/OverlayToggle";
+import { useOverlayPublisher } from "@/overlay/useOverlay";
 import { useLicense } from "@/license/LicenseContext";
 import { FEATURES } from "@/license/types";
 import { useCopilot } from "@/hooks/useCopilot";
@@ -95,6 +97,17 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
   const status: SessionStatus = statusOverride ?? session?.status ?? "active";
   const offsets = useMemo(() => loadOffsets(sessionId), [sessionId, segQ.data]);
 
+  useOverlayPublisher({
+    title: session?.title ?? "Meeting",
+    status: recorder.state === "recording" ? "listening" : recorder.state === "paused" ? "paused" : recorder.state === "stopped" || status === "completed" ? "finished" : "ready",
+    analysing: copilot.pendingCount > 0 || queue.pending > 0,
+    autoDetect: auto,
+    copilotEnabled: copilotAllowed,
+    segments: segQ.data,
+    offsets,
+    answer: latestAnswer,
+  });
+
   async function syncStatus(next: SessionStatus) {
     try {
       await sessionsApi.updateStatus(ownerId, sessionId, next);
@@ -151,6 +164,9 @@ function MeetingWorkspace({ sessionId }: { sessionId: string }) {
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <h1 className="font-display text-4xl text-indigo-900">{session?.title ?? "Meeting"}</h1>
           <StatusPill status={status} />
+          <div className="ml-auto">
+            <OverlayToggle />
+          </div>
         </div>
         <p className="mt-2 text-indigo-500">{session ? `Started ${formatDateTime(session.started_at)}` : "Loading meeting..."}</p>
       </header>

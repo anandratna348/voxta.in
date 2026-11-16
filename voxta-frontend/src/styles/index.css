@@ -28,6 +28,14 @@
     #F7F8FC;
 }
 
+/* The floating overlay window is see-through. Only its panel is painted. */
+html.overlay-window,
+html.overlay-window body,
+html.overlay-window #root {
+  background: transparent !important;
+  overflow: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

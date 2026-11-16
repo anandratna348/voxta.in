@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHUNK_MS, MIN_CHUNK_MS, pickMimeType } from "@/lib/audio";
+import { holdAwake, releaseAwake } from "@/lib/keepAwake";
 
 export type RecorderState = "idle" | "recording" | "paused" | "stopped";
 export type MicState = "unknown" | "ready" | "denied" | "unavailable" | "error";
@@ -173,6 +174,7 @@ export function useRecorder({ deviceId, captureSpeakers = true, onChunk }: Optio
       const stream = await acquire();
       if (!stream) return false;
       setState("recording");
+      holdAwake();
       beginPart();
       startTick();
       return true;
@@ -185,6 +187,7 @@ export function useRecorder({ deviceId, captureSpeakers = true, onChunk }: Optio
 
   const pause = useCallback(async () => {
     setState("paused");
+    releaseAwake();
     await stopPart();
     window.clearInterval(tickTimer.current);
     setElapsedMs(recordedMs.current);
@@ -193,6 +196,7 @@ export function useRecorder({ deviceId, captureSpeakers = true, onChunk }: Optio
 
   const stop = useCallback(async () => {
     setState("stopped");
+    releaseAwake();
     await stopPart();
     window.clearInterval(tickTimer.current);
     setElapsedMs(recordedMs.current);
@@ -209,6 +213,7 @@ export function useRecorder({ deviceId, captureSpeakers = true, onChunk }: Optio
       }
       window.clearTimeout(chunkTimer.current);
       window.clearInterval(tickTimer.current);
+      releaseAwake();
       releaseStream();
     },
     [releaseStream],

@@ -1,8 +1,10 @@
 import { WifiOff } from "lucide-react";
+import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { config } from "@/api/config";
 import { useBackendStatus } from "@/hooks/useBackendStatus";
 import { useLicense } from "@/license/LicenseContext";
+import { initOverlayController } from "@/overlay/controller";
 import { Sidebar } from "./Sidebar";
 import { Splash } from "./Splash";
 
@@ -16,6 +18,10 @@ export function RequireAuth() {
 function AppShell() {
   const backend = useBackendStatus();
   const { warning } = useLicense();
+
+  useEffect(() => {
+    void initOverlayController();
+  }, []);
 
   return (
     <div className="flex h-full app-backdrop">

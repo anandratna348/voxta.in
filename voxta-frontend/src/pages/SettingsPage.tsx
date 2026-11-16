@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/Button";
 import { FeatureBadge } from "@/components/ui/FeatureBadge";
 import { LevelBars } from "@/components/ui/LevelBars";
 import { Switch } from "@/components/ui/Switch";
+import { isTauri } from "@/api/config";
+import { closeOverlay, openOverlay } from "@/overlay/controller";
+import { useOverlayState } from "@/overlay/useOverlay";
+import { SHORTCUTS } from "@/overlay/types";
 import { useLicense } from "@/license/LicenseContext";
 import { useAudioDevices } from "@/hooks/useAudioDevices";
 import { useBackendStatus } from "@/hooks/useBackendStatus";
@@ -38,6 +42,7 @@ const AWAITING = [
 
 export default function SettingsPage() {
   const license = useLicense();
+  const overlay = useOverlayState();
   const { entitlement } = license;
   const backend = useBackendStatus();
   const { devices, refresh } = useAudioDevices();
@@ -192,6 +197,28 @@ export default function SettingsPage() {
         <Row label="Audio part length" hint="Audio is recorded and sent for transcription in parts. This is fixed by the app.">
           <span className="text-sm font-semibold text-indigo-800">{CHUNK_MS / 1000} seconds</span>
         </Row>
+      </Section>
+
+      <Section title="Overlay" description="A see-through window that stays on top of your meeting app or browser.">
+        <Row label="Floating overlay" hint="Shows the live transcript and suggested answers while you keep the other app visible. Drag it anywhere, resize it, and set how transparent it is.">
+          {isTauri ? (
+            <Button variant="secondary" onClick={() => void (overlay.open ? closeOverlay() : openOverlay())}>
+              {overlay.open ? "Close overlay" : "Open overlay"}
+            </Button>
+          ) : (
+            <span className="text-sm text-indigo-400">Available in the desktop app</span>
+          )}
+        </Row>
+        <Row label="Show or hide" hint="Works even while another app is in front.">
+          <kbd className="rounded-lg border border-paper-line bg-paper px-2.5 py-1 font-mono text-xs font-semibold text-indigo-800">{SHORTCUTS.toggle.label}</kbd>
+        </Row>
+        <Row label="Click through" hint="Mouse clicks pass through the overlay to the app underneath. Press the shortcut again to get the overlay back.">
+          <kbd className="rounded-lg border border-paper-line bg-paper px-2.5 py-1 font-mono text-xs font-semibold text-indigo-800">{SHORTCUTS.ghost.label}</kbd>
+        </Row>
+        {overlay.shortcuts === "failed" && (
+          <p role="alert" className="py-4 text-sm text-amber-700">The shortcuts could not be registered, probably because another app already uses them. The overlay still works with its buttons.</p>
+        )}
+        {overlay.error && <p role="alert" className="py-4 text-sm text-rose-700">{overlay.error}</p>}
       </Section>
 
       <Section title="Application" description="Connection, copilot and local data.">

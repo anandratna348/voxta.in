@@ -2,13 +2,19 @@ import type { ReactNode } from "react";
 
 type Block = { type: "p" | "ul" | "ol" | "code" | "h"; lines: string[] };
 
-function inline(text: string): ReactNode[] {
+type Tone = "default" | "onDark";
+const COLORS = {
+  default: { body: "text-indigo-800", strong: "text-indigo-900", code: "bg-lavender-100 text-indigo-800", ulMarker: "marker:text-lavender-400", olMarker: "marker:text-indigo-400" },
+  onDark: { body: "text-white/90", strong: "text-white", code: "bg-white/15 text-white", ulMarker: "marker:text-white/60", olMarker: "marker:text-white/70" },
+} as const;
+
+function inline(text: string, tone: Tone): ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) => {
     if (part.length > 4 && part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i} className="font-semibold text-indigo-900">{part.slice(2, -2)}</strong>;
+      return <strong key={i} className={`font-semibold ${COLORS[tone].strong}`}>{part.slice(2, -2)}</strong>;
     }
     if (part.length > 2 && part.startsWith("`") && part.endsWith("`")) {
-      return <code key={i} className="rounded bg-lavender-100 px-1.5 py-0.5 font-mono text-[13px] text-indigo-800">{part.slice(1, -1)}</code>;
+      return <code key={i} className={`rounded px-1.5 py-0.5 font-mono text-[13px] ${COLORS[tone].code}`}>{part.slice(1, -1)}</code>;
     }
     return part;
   });
@@ -45,9 +51,9 @@ function parse(source: string): Block[] {
 }
 
 /** Small, safe renderer for the formatting Gemini commonly returns. Never injects raw HTML. */
-export function FormattedAnswer({ text }: { text: string }) {
+export function FormattedAnswer({ text, tone = "default" }: { text: string; tone?: Tone }) {
   return (
-    <div className="space-y-3 text-[15px] leading-relaxed text-indigo-800">
+    <div className={`space-y-3 text-[15px] leading-relaxed ${COLORS[tone].body}`}>
       {parse(text).map((b, i) => {
         if (b.type === "code") {
           return (
@@ -56,22 +62,22 @@ export function FormattedAnswer({ text }: { text: string }) {
             </pre>
           );
         }
-        if (b.type === "h") return <p key={i} className="font-semibold text-indigo-900">{inline(b.lines[0])}</p>;
+        if (b.type === "h") return <p key={i} className={`font-semibold ${COLORS[tone].strong}`}>{inline(b.lines[0], tone)}</p>;
         if (b.type === "ul") {
           return (
-            <ul key={i} className="list-disc space-y-1.5 pl-5 marker:text-lavender-400">
-              {b.lines.map((l, j) => <li key={j}>{inline(l)}</li>)}
+            <ul key={i} className={`list-disc space-y-1.5 pl-5 ${COLORS[tone].ulMarker}`}>
+              {b.lines.map((l, j) => <li key={j}>{inline(l, tone)}</li>)}
             </ul>
           );
         }
         if (b.type === "ol") {
           return (
-            <ol key={i} className="list-decimal space-y-1.5 pl-5 marker:font-semibold marker:text-indigo-400">
-              {b.lines.map((l, j) => <li key={j}>{inline(l)}</li>)}
+            <ol key={i} className={`list-decimal space-y-1.5 pl-5 marker:font-semibold ${COLORS[tone].olMarker}`}>
+              {b.lines.map((l, j) => <li key={j}>{inline(l, tone)}</li>)}
             </ol>
           );
         }
-        return <p key={i}>{inline(b.lines.join(" "))}</p>;
+        return <p key={i}>{inline(b.lines.join(" "), tone)}</p>;
       })}
     </div>
   );
